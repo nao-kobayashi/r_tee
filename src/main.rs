@@ -12,6 +12,8 @@ fn main() {
     let input = stdin();
     let args = args().skip(1).collect::<Vec<String>>();
     let append = args.iter().any(|a| a == "-a" || a == "-A");
+    let put_now = args.iter().any(|a| a == "-d" || a == "-D");
+
     let files = args
         .iter()
         .filter(|a| !a.starts_with("-"))
@@ -21,7 +23,7 @@ fn main() {
     let mut writers: Vec<Box<dyn TeeWriter>> = vec![Box::new(StdOutWriter::new())];
     if files.len() > 0 {
         for file in files {
-            writers.push(Box::new(FileWriter::new(&file, append)));
+            writers.push(Box::new(FileWriter::new(&file, append, put_now)));
         }
     }
 

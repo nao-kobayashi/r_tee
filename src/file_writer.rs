@@ -2,13 +2,15 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write};
 use std::path::Path;
 use crate::TeeWriter;
+use chrono::Local;
 
 pub struct FileWriter {
     output: BufWriter<File>,
+    put_now: bool,
 }
 
 impl FileWriter {
-    pub fn new(file_path: &str, append: bool) -> Self {
+    pub fn new(file_path: &str, append: bool, put_now: bool) -> Self {
         let file_exists = Path::new(file_path).exists();
 
         let file = if append && file_exists {
@@ -20,13 +22,19 @@ impl FileWriter {
         };
 
         let output = BufWriter::new(file);
-        Self { output }
+        Self { output, put_now }
     }
 }
 
 impl TeeWriter for FileWriter {
     fn write(&mut self, line: &str) {
-        match self.output.write(line.as_bytes()) {
+        let output = if self.put_now {
+            format!("{} {}", Local::now().to_rfc3339(), line)
+        } else {
+            line.to_string()
+        };
+
+        match self.output.write(output.as_bytes()) {
             Ok(_) => (),
             Err(e) => println!("file write error:{:?}", e),
         }
